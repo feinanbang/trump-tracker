@@ -97,15 +97,30 @@ def format_analysis(content):
 # 注册模板函数
 app.jinja_env.globals['format_analysis'] = format_analysis
 
-# 初始化数据库
-db = TrumpPostsDB()
+# 时区设置
 et_tz = pytz.timezone(TIMEZONE)
+
+# 初始化数据库（安全模式）
+def get_db():
+    """安全获取数据库连接"""
+    try:
+        return TrumpPostsDB()
+    except Exception as e:
+        print(f"数据库连接失败: {e}")
+        return None
 
 
 @app.route('/')
 def index():
     """主页 - 显示最新分析和统计"""
     try:
+        db = get_db()
+        if not db:
+            # 数据库不可用时显示示例页面
+            return render_template('index.html', 
+                                 summaries=[],
+                                 stats={'total_posts': 0, 'total_summaries': 0, 'coverage_days': 0})
+        
         # 获取最近7天的数据
         recent_summaries = []
         today = datetime.now(et_tz)
@@ -145,6 +160,10 @@ def index():
 def daily_analysis(date):
     """每日详细分析页面"""
     try:
+        db = get_db()
+        if not db:
+            return "数据库不可用", 500
+            
         posts = db.get_posts_by_date(date)
         summary = db.get_summary_by_date(date)
         
