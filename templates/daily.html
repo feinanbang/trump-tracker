@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ date }} - Trump Truth Social 深度分析{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- 页面标题 -->
+    <header style="text-align: center; margin-bottom: 3rem;">
+        <h1 style="color: var(--primary-color); margin-bottom: 1rem;">📅 {{ date }} 分析报告</h1>
+        <div class="stats-grid" style="margin-bottom: 2rem;">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.post_count }}</div>
+                <div class="stat-label">帖子总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total_likes }}</div>
+                <div class="stat-label">总点赞数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total_reposts }}</div>
+                <div class="stat-label">总转发数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total_comments }}</div>
+                <div class="stat-label">总评论数</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Claude深度分析 -->
+    {% if summary %}
+    <section class="analysis-card" style="margin-bottom: 3rem;">
+        <div class="card-header">
+            <div class="date-title">🧠 Claude AI 深度分析</div>
+            <div class="post-count">专业解读</div>
+        </div>
+        <div class="card-body">
+                         <div class="summary-content">
+                 {{ format_analysis(summary.summary_content) | safe }}
+             </div>
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.9rem;">
+                <p><strong>分析方式:</strong> {{ summary.generated_by or 'Claude AI' }}</p>
+                <p><strong>覆盖帖子:</strong> {{ summary.post_count }}条</p>
+                <p><strong>生成时间:</strong> {{ summary.generated_at }}</p>
+            </div>
+        </div>
+    </section>
+    {% else %}
+    <section style="text-align: center; padding: 3rem; background: var(--light-color); border-radius: 12px; margin-bottom: 3rem;">
+        <h2 style="color: var(--text-muted); margin-bottom: 1rem;">📝 深度分析准备中</h2>
+        <p style="color: var(--text-muted);">该日期的Claude AI深度分析正在生成中，请稍后查看。</p>
+    </section>
+    {% endif %}
+
+    <!-- 原始帖子列表 -->
+    <section>
+        <h2 style="color: var(--primary-color); margin-bottom: 2rem; text-align: center;">📱 原始帖子详情</h2>
+        
+        {% for post in posts %}
+        <article class="post-item">
+            <div class="post-header">
+                <div class="post-time">⏰ {{ post.post_time }}</div>
+                <div class="post-metrics">
+                    <span>👍 {{ post.likes_count or 0 }}</span>
+                    <span>🔄 {{ post.reposts_count or 0 }}</span>
+                    <span>💬 {{ post.comments_count or 0 }}</span>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                {{ post.content | replace('\n', '<br>') | safe }}
+            </div>
+            
+            {% if post.media_urls %}
+            <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 6px;">
+                <strong>📎 媒体内容:</strong> {{ post.media_urls }}
+            </div>
+            {% endif %}
+            
+            <div class="post-url">
+                <a href="{{ post.post_url }}" target="_blank" rel="noopener">🔗 查看原帖</a>
+                <span style="margin-left: 1rem; color: var(--text-muted);">
+                    抓取时间: {{ post.scraped_at }}
+                </span>
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+
+    <!-- 返回导航 -->
+    <nav style="text-align: center; margin-top: 3rem; padding: 2rem;">
+        <a href="/" class="btn btn-primary">← 返回首页</a>
+        <a href="/archive" class="btn btn-outline" style="margin-left: 1rem;">查看更多日期</a>
+    </nav>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 为帖子内容添加交互效果
+    const posts = document.querySelectorAll('.post-item');
+    posts.forEach((post, index) => {
+        post.style.opacity = '0';
+        post.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            post.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            post.style.opacity = '1';
+            post.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // 高亮显示长帖子
+    posts.forEach(post => {
+        const content = post.querySelector('.post-content');
+        if (content && content.textContent.length > 500) {
+            post.style.borderLeft = '4px solid var(--warning-color)';
+        }
+    });
+});
+</script>
+{% endblock %} 

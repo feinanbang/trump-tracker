@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Trump Truth Social 深度分析平台 - 首页{% endblock %}
+
+{% block content %}
+<!-- 英雄区域 -->
+<section class="hero">
+    <div class="container">
+        <h1>🎯 Trump Truth Social 深度分析</h1>
+        <p>基于Claude AI的专业政治分析平台，每日追踪并深度解读Trump在Truth Social上的动态</p>
+    </div>
+</section>
+
+<div class="container">
+    <!-- 统计数据 -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_posts }}</div>
+            <div class="stat-label">总帖子数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_summaries }}</div>
+            <div class="stat-label">已完成分析</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.coverage_days }}</div>
+            <div class="stat-label">覆盖天数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ (stats.total_summaries / stats.coverage_days * 100) | round(1) if stats.coverage_days > 0 else 0 }}%</div>
+            <div class="stat-label">分析完成率</div>
+        </div>
+    </section>
+
+    <!-- 最新分析 -->
+    <section class="analysis-section">
+        <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary-color);">📈 最新分析报告</h2>
+        
+        {% if summaries %}
+            <div class="analysis-grid">
+                {% for summary in summaries %}
+                <article class="analysis-card">
+                    <div class="card-header">
+                        <div class="date-title">{{ summary.date }}</div>
+                        <div class="post-count">{{ summary.post_count }}条帖子</div>
+                    </div>
+                    <div class="card-body">
+                        {% if summary.has_summary %}
+                            <div class="summary-content">
+                                {{ format_analysis(summary.summary.summary_content) | safe }}
+                            </div>
+                            <div style="margin-top: 1.5rem;">
+                                <a href="/daily/{{ summary.date }}" class="btn btn-primary">查看详细 →</a>
+                            </div>
+                        {% else %}
+                            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
+                                📝 该日期的深度分析正在准备中...
+                            </p>
+                            <div style="text-align: center;">
+                                <a href="/daily/{{ summary.date }}" class="btn btn-outline">查看原始帖子</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>正在加载最新分析数据...</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- 功能介绍 -->
+    <section style="margin-top: 4rem; padding: 3rem; background: var(--light-color); border-radius: 12px;">
+        <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary-color);">🚀 平台特色</h2>
+        <div class="stats-grid">
+            <div style="text-align: center;">
+                <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">🤖 AI深度分析</h3>
+                <p>基于Claude AI的专业分析，深入理解政治背景和文化内涵</p>
+            </div>
+            <div style="text-align: center;">
+                <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">📊 数据可视化</h3>
+                <p>清晰的统计图表，直观展示帖子互动数据和趋势变化</p>
+            </div>
+            <div style="text-align: center;">
+                <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">⏰ 实时更新</h3>
+                <p>每小时自动抓取最新内容，确保分析的时效性和完整性</p>
+            </div>
+            <div style="text-align: center;">
+                <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">🔗 原文追溯</h3>
+                <p>提供所有帖子的原文链接，便于验证和深入研究</p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %} 
