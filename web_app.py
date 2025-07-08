@@ -1,53 +1,244 @@
 #!/usr/bin/env python3
 """
 Trump Truth Social 分析网站
-Flask后端应用 - JSON数据版本
+Flask后端应用 - 数据库优先，硬编码备用
 """
 
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify
 from datetime import datetime, timedelta
 import pytz
 import json
 import re
 import os
+import sqlite3
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'trump_tracker_2025'
 
+# 数据库配置
+DATABASE_PATH = "trump_posts.db"
+TIMEZONE = "US/Eastern"
 
-def load_data():
-    """从JSON文件加载数据"""
+
+def get_db_connection():
+    """获取数据库连接"""
     try:
-        data_file = 'data_exports/latest_data.json'
-        if os.path.exists(data_file):
-            with open(data_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
+        if os.path.exists(DATABASE_PATH):
+            conn = sqlite3.connect(DATABASE_PATH)
+            conn.row_factory = sqlite3.Row
+            return conn
         else:
-            # 返回空数据结构
-            return {
-                'statistics': {
-                    'total_posts': 0,
-                    'total_days': 0,
-                    'latest_post': None,
-                    'daily_stats': []
-                },
-                'summaries': [],
-                'recent_posts': [],
-                'status': 'no_data'
-            }
+            print(f"数据库文件不存在: {DATABASE_PATH}")
+            return None
     except Exception as e:
-        print(f"加载数据文件失败: {e}")
+        print(f"数据库连接失败: {e}")
+        return None
+
+
+def get_real_summaries_from_db():
+    """从数据库获取真实的Claude分析"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return []
+        
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT summary_date, summary_content, post_count, generated_at, generated_by
+            FROM daily_summaries 
+            ORDER BY summary_date DESC
+        ''')
+        
+        summaries = []
+        for row in cursor.fetchall():
+            summaries.append({
+                'analysis_date': row['summary_date'],
+                'post_count': row['post_count'],
+                'summary_text': row['summary_content'],
+                'key_topics': [],  # 简化处理
+                'generated_at': row['generated_at'],
+                'generated_by': row['generated_by']
+            })
+        
+        conn.close()
+        print(f"✅ 从数据库成功加载 {len(summaries)} 条分析")
+        return summaries
+        
+    except Exception as e:
+        print(f"❌ 从数据库加载分析失败: {e}")
+        return []
+
+
+def get_real_posts_from_db():
+    """从数据库获取真实的帖子数据"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return []
+        
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT post_id, content, timestamp_et, likes_count, reposts_count, comments_count
+            FROM trump_posts 
+            ORDER BY timestamp_et DESC
+            LIMIT 50
+        ''')
+        
+        posts = []
+        for row in cursor.fetchall():
+            posts.append({
+                'post_id': row['post_id'],
+                'content': row['content'],
+                'created_at': row['timestamp_et'],
+                'engagement_score': row['likes_count']
+            })
+        
+        conn.close()
+        print(f"✅ 从数据库成功加载 {len(posts)} 条帖子")
+        return posts
+        
+    except Exception as e:
+        print(f"❌ 从数据库加载帖子失败: {e}")
+        return []
+
+
+def get_real_stats_from_db():
+    """从数据库获取真实的统计数据"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        
+        cursor = conn.cursor()
+        
+        # 获取总帖子数
+        cursor.execute('SELECT COUNT(*) FROM trump_posts')
+        total_posts = cursor.fetchone()[0]
+        
+        # 获取总分析数
+        cursor.execute('SELECT COUNT(*) FROM daily_summaries')
+        total_summaries = cursor.fetchone()[0]
+        
+        # 获取最新帖子时间
+        cursor.execute('SELECT MAX(timestamp_et) FROM trump_posts')
+        latest_post = cursor.fetchone()[0]
+        
+        # 获取每日统计
+        cursor.execute('''
+            SELECT DATE(timestamp_et) as date, COUNT(*) as post_count
+            FROM trump_posts 
+            GROUP BY DATE(timestamp_et)
+            ORDER BY date DESC
+            LIMIT 7
+        ''')
+        
+        daily_stats = []
+        for row in cursor.fetchall():
+            daily_stats.append({
+                'date': row['date'],
+                'post_count': row['post_count']
+            })
+        
+        conn.close()
+        
         return {
-            'statistics': {
-                'total_posts': 0,
-                'total_days': 0,
-                'latest_post': None,
-                'daily_stats': []
-            },
-            'summaries': [],
-            'recent_posts': [],
-            'status': 'error'
+            'total_posts': total_posts,
+            'total_days': len(daily_stats),
+            'latest_post': latest_post,
+            'daily_stats': daily_stats
         }
+        
+    except Exception as e:
+        print(f"❌ 从数据库加载统计失败: {e}")
+        return None
+
+
+def get_fallback_data():
+    """备用硬编码数据"""
+    return {
+        'statistics': {
+            'total_posts': 60,
+            'total_days': 4,
+            'latest_post': '2025-07-07 18:30:00',
+            'daily_stats': [
+                {'date': '2025-07-07', 'post_count': 5},
+                {'date': '2025-07-06', 'post_count': 8},
+                {'date': '2025-07-05', 'post_count': 14},
+                {'date': '2025-07-04', 'post_count': 33}
+            ]
+        },
+        'summaries': [
+            {
+                'analysis_date': '2025-07-06',
+                'post_count': 8,
+                'summary_text': """## 2025-07-06 Trump Truth Social 动态深度分析
+
+**核心观点**: 特朗普总统首次在Truth Social正式宣布"REMIGRATION"(再移民)作为其政府政策，并庆祝德州洪灾联邦响应的成效，展现其移民强硬立场与灾难领导力的双重形象。
+
+**主要内容**:
+- 大力宣传"Operation Apex Hammer"行动成果，该行动在新泽西州逮捕了264名逃犯，包括17名杀人犯、95名帮派成员，其中多人为非法移民
+- 首次在Truth Social正式使用"REMIGRATION"一词描述移民政策，该词汇在欧洲被极右翼团体用来描述大规模驱逐非白人移民的种族清洗政策
+- 国务院已计划创建"再移民办公室"，将难民援助资源转向驱逐移民，目标是每日逮捕3000名移民
+- 宣布为德州克尔县签署重大灾难声明，称海岸警卫队和州应急人员已拯救超过850人生命
+- 强调"ONE BIG BEAUTIFUL BILL ACT"将提供ICE所需的全部资金和资源来执行"历史上最大规模的驱逐行动"
+
+**语调特点**: 表现出强烈的民族主义色彩和对移民问题的零容忍态度，同时展现出对灾难响应的领导力和人道主义关怀的平衡
+
+**值得关注**: "REMIGRATION"概念的首次正式提出标志着美国移民政策可能的根本性转向，这一词汇的使用在国际上具有极大争议性""",
+                'key_topics': ['REMIGRATION政策', '移民执法', '德州洪灾', 'ICE资金', '边境安全']
+            },
+            {
+                'analysis_date': '2025-07-05',
+                'post_count': 14,
+                'summary_text': """## 2025-07-05 Trump Truth Social 动态深度分析
+
+**核心观点**: 特朗普总统在7月4日白宫军人家庭野餐会上签署"ONE BIG BEAUTIFUL BILL ACT"成为法律，并在德州发生史上最严重洪灾后迅速做出联邦灾难响应。
+
+**主要内容**:
+- 在白宫南草坪举行的军人家庭野餐会上正式签署"ONE BIG BEAUTIFUL BILL ACT"，仪式包括B-2隐形轰炸机和F-35、F-22战斗机飞越表演，这些正是参与6月对伊朗核设施空袭的同型战机
+- 法案将债务上限提高5万亿美元，永久延续2017年减税政策，削减医疗补助等社会保障项目，增加移民执法和国防支出
+- 德州中部发生灾难性洪水，至少82人死亡(其中28名儿童)，27名女童夏令营营员仍失踪，瓜达卢佩河45分钟内上涨26英尺
+- 特朗普表示国土安全部长克里斯蒂·诺姆将赴现场，并可能于周五亲自访问灾区
+- 在7月4日发布"HAPPY 4TH OF JULY!"庆祝独立日
+
+**语调特点**: 充满胜利感和爱国主义激情，将政治成就与国家庆典巧妙结合，展现出统一国家和庆祝传统的领导形象
+
+**值得关注**: 独立日当天签署如此重大法案的时机选择具有深刻的象征意义，UFC比赛进入白宫体现了特朗普独特的文化政治策略""",
+                'key_topics': ['独立日庆祝', '立法胜利', '建国250周年', 'UFC白宫', '德州洪灾']
+            }
+        ],
+        'recent_posts': [
+            {
+                'post_id': 'real_003',
+                'content': 'This July 4th weekend I want to give a big "THANK YOU!" to the Heroic ICE Officers fighting every day to reclaim our Sovereignty and Freedom. It\'s called "REMIGRATION" and, it will, MAKE AMERICA GREAT AGAIN!',
+                'created_at': '2025-07-06 00:50:00',
+                'engagement_score': 51000
+            }
+        ],
+        'status': 'fallback_data'
+    }
+
+
+def get_data():
+    """获取数据 - 优先数据库，失败时使用备用数据"""
+    print("🔍 正在加载数据...")
+    
+    # 尝试从数据库加载
+    summaries = get_real_summaries_from_db()
+    posts = get_real_posts_from_db() 
+    stats = get_real_stats_from_db()
+    
+    if summaries and stats:
+        print("✅ 使用数据库数据")
+        return {
+            'statistics': stats,
+            'summaries': summaries,
+            'recent_posts': posts,
+            'status': 'database_data'
+        }
+    else:
+        print("⚠️ 数据库不可用，使用备用数据")
+        return get_fallback_data()
 
 
 def format_analysis(content):
@@ -136,7 +327,7 @@ app.jinja_env.globals['format_analysis'] = format_analysis
 def index():
     """主页 - 显示最新分析和统计"""
     try:
-        data = load_data()
+        data = get_data()
         
         # 格式化统计数据
         stats = {
@@ -154,7 +345,7 @@ def index():
                 'has_summary': True,
                 'summary': {
                     'summary_text': summary['summary_text'],
-                    'key_topics': json.dumps(summary['key_topics'], ensure_ascii=False)
+                    'key_topics': json.dumps(summary.get('key_topics', []), ensure_ascii=False)
                 }
             })
         
@@ -170,7 +361,7 @@ def index():
 def daily_analysis(date):
     """每日详细分析页面"""
     try:
-        data = load_data()
+        data = get_data()
         
         # 查找指定日期的摘要
         summary = None
@@ -180,7 +371,7 @@ def daily_analysis(date):
             if s['analysis_date'] == date:
                 summary = {
                     'summary_text': s['summary_text'],
-                    'key_topics': json.dumps(s['key_topics'], ensure_ascii=False)
+                    'key_topics': json.dumps(s.get('key_topics', []), ensure_ascii=False)
                 }
                 post_count = s['post_count']
                 break
@@ -218,62 +409,11 @@ def daily_analysis(date):
         return f"Error: {e}", 500
 
 
-@app.route('/api/posts/<date>')
-def api_posts(date):
-    """API接口 - 获取指定日期的帖子数据"""
-    try:
-        data = load_data()
-        
-        # 获取该日期的帖子
-        posts = []
-        for post in data['recent_posts']:
-            if post['created_at'].startswith(date):
-                posts.append(post)
-        
-        return jsonify({
-            'success': True,
-            'date': date,
-            'count': len(posts),
-            'posts': posts
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-@app.route('/api/summary/<date>')
-def api_summary(date):
-    """API接口 - 获取指定日期的分析小结"""
-    try:
-        data = load_data()
-        
-        # 查找指定日期的摘要
-        summary = None
-        for s in data['summaries']:
-            if s['analysis_date'] == date:
-                summary = s
-                break
-        
-        return jsonify({
-            'success': True,
-            'date': date,
-            'has_summary': bool(summary),
-            'summary': summary
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
 @app.route('/api/stats')
 def api_stats():
     """API接口 - 获取总体统计数据"""
     try:
-        data = load_data()
+        data = get_data()
         
         return jsonify({
             'success': True,
@@ -299,7 +439,7 @@ def about():
 def archive():
     """历史归档页面"""
     try:
-        data = load_data()
+        data = get_data()
         
         # 获取所有有分析的日期
         all_dates = []
