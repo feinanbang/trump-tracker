@@ -45,9 +45,9 @@
                         <div class="post-count">{{ summary.post_count }}条帖子</div>
                     </div>
                     <div class="card-body">
-                        {% if summary.has_summary %}
+                        {% if summary.has_summary and summary.summary %}
                             <div class="summary-content">
-                                {{ format_analysis(summary.summary.summary_content) | safe }}
+                                {{ format_analysis(summary.summary.summary_text) | safe }}
                             </div>
                             <div style="margin-top: 1.5rem;">
                                 <a href="/daily/{{ summary.date }}" class="btn btn-primary">查看详细 →</a>
