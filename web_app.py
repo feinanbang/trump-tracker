@@ -220,10 +220,10 @@ def get_fallback_data():
 
 
 def get_data():
-    """获取数据 - 优先数据库，失败时使用备用数据"""
+    """获取数据 - 优先数据库，然后JSON文件，最后备用数据"""
     print("🔍 正在加载数据...")
     
-    # 尝试从数据库加载
+    # 尝试从数据库加载（本地开发环境）
     summaries = get_real_summaries_from_db()
     posts = get_real_posts_from_db() 
     stats = get_real_stats_from_db()
@@ -236,9 +236,20 @@ def get_data():
             'recent_posts': posts,
             'status': 'database_data'
         }
-    else:
-        print("⚠️ 数据库不可用，使用备用数据")
-        return get_fallback_data()
+    
+    # 尝试从JSON文件加载（Vercel部署环境）
+    try:
+        if os.path.exists('latest_data.json'):
+            with open('latest_data.json', 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+            print("✅ 使用JSON文件数据")
+            return json_data
+    except Exception as e:
+        print(f"❌ JSON文件加载失败: {e}")
+    
+    # 最后使用备用数据
+    print("⚠️ 数据库和JSON文件都不可用，使用备用数据")
+    return get_fallback_data()
 
 
 def format_analysis(content):
