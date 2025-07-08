@@ -4,7 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Trump Truth Social 深度分析{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2.0">
+    <style>
+        /* 内联关键样式确保立即生效 */
+        .analysis-card {
+            background: white !important;
+            border-radius: 15px !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+            overflow: hidden !important;
+            margin-bottom: 2rem !important;
+            border: 1px solid #e9ecef !important;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #1a5490, #2563eb) !important;
+            color: white !important;
+            padding: 2rem !important;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1a5490, #2563eb) !important;
+            color: white !important;
+            padding: 1rem 2rem !important;
+            border-radius: 10px !important;
+            text-decoration: none !important;
+            font-weight: 600 !important;
+        }
+    </style>
     <meta name="description" content="专业的Trump Truth Social帖子深度分析平台，提供每日政治动态解读和数据统计">
     <meta name="keywords" content="Trump, Truth Social, 政治分析, 数据分析, 新闻解读">
 </head>
