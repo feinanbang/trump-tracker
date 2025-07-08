@@ -4,60 +4,61 @@
 
 {% block content %}
 <!-- 英雄区域 -->
-<section class="hero">
-    <div class="container">
-        <h1>🎯 Trump Truth Social 深度分析</h1>
-        <p>基于Claude AI的专业政治分析平台，每日追踪并深度解读Trump在Truth Social上的动态</p>
+<section style="background: linear-gradient(135deg, #f8f9fa, #e3f2fd); padding: 3rem 0; text-align: center; margin-bottom: 3rem;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+        <h1 style="font-size: 2.5rem; color: #1a5490; margin-bottom: 1rem;">🎯 Trump Truth Social 深度分析</h1>
+        <p style="font-size: 1.2rem; color: #6c757d; max-width: 600px; margin: 0 auto;">基于Claude AI的专业政治分析平台，每日追踪并深度解读Trump在Truth Social上的动态</p>
     </div>
 </section>
 
-<div class="container">
+<div style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
     <!-- 统计数据 -->
-    <section class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number">{{ stats.total_posts }}</div>
-            <div class="stat-label">总帖子数</div>
+    <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; transition: transform 0.3s;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: #1a5490; margin-bottom: 0.5rem;">{{ stats.total_posts }}</div>
+            <div style="color: #6c757d; font-size: 1.1rem;">总帖子数</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ stats.total_summaries }}</div>
-            <div class="stat-label">已完成分析</div>
+        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; transition: transform 0.3s;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: #1a5490; margin-bottom: 0.5rem;">{{ stats.total_summaries }}</div>
+            <div style="color: #6c757d; font-size: 1.1rem;">已完成分析</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ stats.coverage_days }}</div>
-            <div class="stat-label">覆盖天数</div>
+        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; transition: transform 0.3s;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: #1a5490; margin-bottom: 0.5rem;">{{ stats.coverage_days }}</div>
+            <div style="color: #6c757d; font-size: 1.1rem;">覆盖天数</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ (stats.total_summaries / stats.coverage_days * 100) | round(1) if stats.coverage_days > 0 else 0 }}%</div>
-            <div class="stat-label">分析完成率</div>
+        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; transition: transform 0.3s;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: #1a5490; margin-bottom: 0.5rem;">{{ (stats.total_summaries / stats.coverage_days * 100) | round(1) if stats.coverage_days > 0 else 0 }}%</div>
+            <div style="color: #6c757d; font-size: 1.1rem;">分析完成率</div>
         </div>
     </section>
 
     <!-- 最新分析 -->
-    <section class="analysis-section">
-        <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary-color);">📈 最新分析报告</h2>
+    <section style="background: white; padding: 2rem; margin: 1.5rem 0; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h2 style="text-align: center; margin-bottom: 2rem; color: #1a5490; font-size: 2rem;">📈 最新分析报告</h2>
         
         {% if summaries %}
-            <div class="analysis-grid">
+            <div style="display: grid; gap: 2rem;">
                 {% for summary in summaries %}
-                <article class="analysis-card">
-                    <div class="card-header">
-                        <div class="date-title">{{ summary.date }}</div>
-                        <div class="post-count">{{ summary.post_count }}条帖子</div>
+                <article style="background: white; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); overflow: hidden; transition: all 0.3s ease; margin-bottom: 2rem; border: 1px solid #e9ecef;">
+                    <div style="background: linear-gradient(135deg, #1a5490, #2563eb); color: white; padding: 2rem; position: relative; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; color: white;">{{ summary.date }}</div>
+                        <div style="background: rgba(255,255,255,0.25); padding: 0.4rem 1rem; border-radius: 25px; font-size: 0.9rem; backdrop-filter: blur(10px); color: white;">{{ summary.post_count }}条帖子</div>
+                        <div style="content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #ffd700, #ff6b35);"></div>
                     </div>
-                    <div class="card-body">
+                    <div style="padding: 2.5rem; background: #fafafa;">
                         {% if summary.has_summary and summary.summary %}
-                            <div class="summary-content">
+                            <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); line-height: 1.8; color: #343a40; font-size: 1.05rem;">
                                 {{ format_analysis(summary.summary.summary_text) | safe }}
                             </div>
                             <div style="margin-top: 1.5rem;">
-                                <a href="/daily/{{ summary.date }}" class="btn btn-primary">查看详细 →</a>
+                                <a href="/daily/{{ summary.date }}" style="display: inline-block; padding: 1rem 2rem; border: none; border-radius: 10px; text-decoration: none; font-weight: 600; transition: all 0.3s ease; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; position: relative; overflow: hidden; background: linear-gradient(135deg, #1a5490, #2563eb); color: white; box-shadow: 0 4px 15px rgba(26, 84, 144, 0.3);">查看详细 →</a>
                             </div>
                         {% else %}
-                            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
+                            <p style="color: #6c757d; text-align: center; padding: 2rem;">
                                 📝 该日期的深度分析正在准备中...
                             </p>
                             <div style="text-align: center;">
-                                <a href="/daily/{{ summary.date }}" class="btn btn-outline">查看原始帖子</a>
+                                <a href="/daily/{{ summary.date }}" style="border: 2px solid #1a5490; color: #1a5490; background: transparent; display: inline-block; padding: 0.8rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.3s;">查看原始帖子</a>
                             </div>
                         {% endif %}
                     </div>
@@ -65,34 +66,41 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="loading">
-                <div class="spinner"></div>
+            <div style="text-align: center; padding: 3rem; color: #6c757d;">
+                <div style="border: 3px solid #dee2e6; border-top: 3px solid #1a5490; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
                 <p>正在加载最新分析数据...</p>
             </div>
         {% endif %}
     </section>
 
     <!-- 功能介绍 -->
-    <section style="margin-top: 4rem; padding: 3rem; background: var(--light-color); border-radius: 12px;">
-        <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary-color);">🚀 平台特色</h2>
-        <div class="stats-grid">
+    <section style="margin-top: 4rem; padding: 3rem; background: #f8f9fa; border-radius: 12px;">
+        <h2 style="text-align: center; margin-bottom: 2rem; color: #1a5490; font-size: 2rem;">🚀 平台特色</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
             <div style="text-align: center;">
-                <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">🤖 AI深度分析</h3>
-                <p>基于Claude AI的专业分析，深入理解政治背景和文化内涵</p>
+                <h3 style="color: #dc3545; margin-bottom: 1rem; font-size: 1.3rem;">🤖 AI深度分析</h3>
+                <p style="line-height: 1.6;">基于Claude AI的专业分析，深入理解政治背景和文化内涵</p>
             </div>
             <div style="text-align: center;">
-                <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">📊 数据可视化</h3>
-                <p>清晰的统计图表，直观展示帖子互动数据和趋势变化</p>
+                <h3 style="color: #dc3545; margin-bottom: 1rem; font-size: 1.3rem;">📊 数据可视化</h3>
+                <p style="line-height: 1.6;">清晰的统计图表，直观展示帖子互动数据和趋势变化</p>
             </div>
             <div style="text-align: center;">
-                <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">⏰ 实时更新</h3>
-                <p>每小时自动抓取最新内容，确保分析的时效性和完整性</p>
+                <h3 style="color: #dc3545; margin-bottom: 1rem; font-size: 1.3rem;">⏰ 实时更新</h3>
+                <p style="line-height: 1.6;">每小时自动抓取最新内容，确保分析的时效性和完整性</p>
             </div>
             <div style="text-align: center;">
-                <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">🔗 原文追溯</h3>
-                <p>提供所有帖子的原文链接，便于验证和深入研究</p>
+                <h3 style="color: #dc3545; margin-bottom: 1rem; font-size: 1.3rem;">🔗 原文追溯</h3>
+                <p style="line-height: 1.6;">提供所有帖子的原文链接，便于验证和深入研究</p>
             </div>
         </div>
     </section>
 </div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
 {% endblock %} 
