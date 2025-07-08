@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Trump Truth Social 分析网站
-Flask后端应用
+Flask后端应用 - JSON数据版本
 """
 
 from flask import Flask, render_template, jsonify, request
@@ -9,11 +9,45 @@ from datetime import datetime, timedelta
 import pytz
 import json
 import re
-from database import TrumpPostsDB
-from config import TIMEZONE
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'trump_tracker_2025'
+
+
+def load_data():
+    """从JSON文件加载数据"""
+    try:
+        data_file = 'data_exports/latest_data.json'
+        if os.path.exists(data_file):
+            with open(data_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            # 返回空数据结构
+            return {
+                'statistics': {
+                    'total_posts': 0,
+                    'total_days': 0,
+                    'latest_post': None,
+                    'daily_stats': []
+                },
+                'summaries': [],
+                'recent_posts': [],
+                'status': 'no_data'
+            }
+    except Exception as e:
+        print(f"加载数据文件失败: {e}")
+        return {
+            'statistics': {
+                'total_posts': 0,
+                'total_days': 0,
+                'latest_post': None,
+                'daily_stats': []
+            },
+            'summaries': [],
+            'recent_posts': [],
+            'status': 'error'
+        }
 
 
 def format_analysis(content):
@@ -97,56 +131,32 @@ def format_analysis(content):
 # 注册模板函数
 app.jinja_env.globals['format_analysis'] = format_analysis
 
-# 时区设置
-et_tz = pytz.timezone(TIMEZONE)
-
-# 初始化数据库（安全模式）
-def get_db():
-    """安全获取数据库连接"""
-    try:
-        return TrumpPostsDB()
-    except Exception as e:
-        print(f"数据库连接失败: {e}")
-        return None
-
 
 @app.route('/')
 def index():
     """主页 - 显示最新分析和统计"""
     try:
-        db = get_db()
-        if not db:
-            # 数据库不可用时显示示例页面
-            return render_template('index.html', 
-                                 summaries=[],
-                                 stats={'total_posts': 0, 'total_summaries': 0, 'coverage_days': 0})
+        data = load_data()
         
-        # 获取最近7天的数据
-        recent_summaries = []
-        today = datetime.now(et_tz)
-        
-        for i in range(7):
-            date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
-            posts = db.get_posts_by_date(date)
-            summary = db.get_summary_by_date(date)
-            
-            if posts:
-                recent_summaries.append({
-                    'date': date,
-                    'post_count': len(posts),
-                    'has_summary': bool(summary),
-                    'summary': summary
-                })
-        
-        # 获取总体统计
-        total_posts = db.get_posts_count()
-        total_summaries = db.get_summaries_count()
-        
+        # 格式化统计数据
         stats = {
-            'total_posts': total_posts,
-            'total_summaries': total_summaries,
-            'coverage_days': len([s for s in recent_summaries if s['post_count'] > 0])
+            'total_posts': data['statistics']['total_posts'],
+            'total_summaries': len(data['summaries']),
+            'coverage_days': data['statistics']['total_days']
         }
+        
+        # 格式化摘要数据，为模板兼容性调整格式
+        recent_summaries = []
+        for summary in data['summaries'][:7]:  # 最近7天
+            recent_summaries.append({
+                'date': summary['analysis_date'],
+                'post_count': summary['post_count'],
+                'has_summary': True,
+                'summary': {
+                    'summary_text': summary['summary_text'],
+                    'key_topics': json.dumps(summary['key_topics'], ensure_ascii=False)
+                }
+            })
         
         return render_template('index.html', 
                              summaries=recent_summaries,
@@ -160,34 +170,47 @@ def index():
 def daily_analysis(date):
     """每日详细分析页面"""
     try:
-        db = get_db()
-        if not db:
-            return "数据库不可用", 500
-            
-        posts = db.get_posts_by_date(date)
-        summary = db.get_summary_by_date(date)
+        data = load_data()
         
-        if not posts:
-            return "该日期没有数据", 404
+        # 查找指定日期的摘要
+        summary = None
+        post_count = 0
         
-        # 按时间排序帖子
-        sorted_posts = sorted(posts, key=lambda x: x.get('post_time', ''))
+        for s in data['summaries']:
+            if s['analysis_date'] == date:
+                summary = {
+                    'summary_text': s['summary_text'],
+                    'key_topics': json.dumps(s['key_topics'], ensure_ascii=False)
+                }
+                post_count = s['post_count']
+                break
+        
+        if not summary:
+            return "该日期没有分析数据", 404
+        
+        # 获取该日期的帖子（从recent_posts中筛选）
+        posts = []
+        for post in data['recent_posts']:
+            if post['created_at'].startswith(date):
+                posts.append({
+                    'content': post['content'],
+                    'post_time': post['created_at'].split(' ')[1] if ' ' in post['created_at'] else '',
+                    'likes_count': post.get('engagement_score', 0),
+                    'reposts_count': 0,
+                    'comments_count': 0
+                })
         
         # 计算统计数据
-        total_likes = sum(post.get('likes_count', 0) for post in posts)
-        total_reposts = sum(post.get('reposts_count', 0) for post in posts)
-        total_comments = sum(post.get('comments_count', 0) for post in posts)
-        
         stats = {
-            'post_count': len(posts),
-            'total_likes': total_likes,
-            'total_reposts': total_reposts,
-            'total_comments': total_comments
+            'post_count': post_count,
+            'total_likes': sum(post.get('likes_count', 0) for post in posts),
+            'total_reposts': 0,
+            'total_comments': 0
         }
         
         return render_template('daily.html',
                              date=date,
-                             posts=sorted_posts,
+                             posts=posts,
                              summary=summary,
                              stats=stats)
     
@@ -199,7 +222,14 @@ def daily_analysis(date):
 def api_posts(date):
     """API接口 - 获取指定日期的帖子数据"""
     try:
-        posts = db.get_posts_by_date(date)
+        data = load_data()
+        
+        # 获取该日期的帖子
+        posts = []
+        for post in data['recent_posts']:
+            if post['created_at'].startswith(date):
+                posts.append(post)
+        
         return jsonify({
             'success': True,
             'date': date,
@@ -217,7 +247,15 @@ def api_posts(date):
 def api_summary(date):
     """API接口 - 获取指定日期的分析小结"""
     try:
-        summary = db.get_summary_by_date(date)
+        data = load_data()
+        
+        # 查找指定日期的摘要
+        summary = None
+        for s in data['summaries']:
+            if s['analysis_date'] == date:
+                summary = s
+                break
+        
         return jsonify({
             'success': True,
             'date': date,
@@ -235,26 +273,13 @@ def api_summary(date):
 def api_stats():
     """API接口 - 获取总体统计数据"""
     try:
-        total_posts = db.get_posts_count()
-        total_summaries = db.get_summaries_count()
-        
-        # 最近7天数据
-        recent_data = []
-        today = datetime.now(et_tz)
-        
-        for i in range(7):
-            date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
-            posts = db.get_posts_by_date(date)
-            recent_data.append({
-                'date': date,
-                'post_count': len(posts)
-            })
+        data = load_data()
         
         return jsonify({
             'success': True,
-            'total_posts': total_posts,
-            'total_summaries': total_summaries,
-            'recent_data': recent_data
+            'total_posts': data['statistics']['total_posts'],
+            'total_summaries': len(data['summaries']),
+            'recent_data': data['statistics']['daily_stats']
         })
     
     except Exception as e:
@@ -274,22 +299,16 @@ def about():
 def archive():
     """历史归档页面"""
     try:
-        # 获取所有有数据的日期
-        all_dates = []
-        today = datetime.now(et_tz)
+        data = load_data()
         
-        # 检查最近30天
-        for i in range(30):
-            date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
-            posts = db.get_posts_by_date(date)
-            summary = db.get_summary_by_date(date)
-            
-            if posts:
-                all_dates.append({
-                    'date': date,
-                    'post_count': len(posts),
-                    'has_summary': bool(summary)
-                })
+        # 获取所有有分析的日期
+        all_dates = []
+        for summary in data['summaries']:
+            all_dates.append({
+                'date': summary['analysis_date'],
+                'post_count': summary['post_count'],
+                'has_summary': True
+            })
         
         return render_template('archive.html', dates=all_dates)
     

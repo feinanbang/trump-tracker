@@ -1,0 +1,87 @@
+{
+  "export_time": "2025-07-08T11:44:55.092442",
+  "statistics": {
+    "total_posts": 60,
+    "total_days": 4,
+    "latest_post": "2025-07-07 18:30:00",
+    "daily_stats": [
+      {
+        "date": "2025-07-07",
+        "post_count": 5
+      },
+      {
+        "date": "2025-07-06",
+        "post_count": 8
+      },
+      {
+        "date": "2025-07-05",
+        "post_count": 14
+      },
+      {
+        "date": "2025-07-04",
+        "post_count": 33
+      }
+    ]
+  },
+  "summaries": [
+    {
+      "analysis_date": "2025-07-07",
+      "post_count": 5,
+      "summary_text": "今日Trump继续推进REMIGRATION政策讨论，强调边境安全与移民政策的重要性。同时回应了媒体对其政策的质疑，展现出坚定的政策立场。",
+      "key_topics": [
+        "REMIGRATION",
+        "边境安全",
+        "媒体回应",
+        "政策坚持"
+      ]
+    },
+    {
+      "analysis_date": "2025-07-06",
+      "post_count": 8,
+      "summary_text": "Trump正式宣布\"REMIGRATION\"政策概念，这是一个重大的移民政策转向。帖子显示了对现有移民体系的根本性重新思考，强调美国优先和边境控制的重要性。",
+      "key_topics": [
+        "REMIGRATION政策",
+        "移民改革",
+        "美国优先",
+        "边境控制"
+      ]
+    },
+    {
+      "analysis_date": "2025-07-05",
+      "post_count": 14,
+      "summary_text": "独立日当天，Trump发布了庆祝美国独立的帖子，同时关注德州的洪灾情况。展现了作为领导者对国家庆典和自然灾害的双重关注，体现了政治责任感。",
+      "key_topics": [
+        "独立日庆祝",
+        "德州洪灾",
+        "领导力展现",
+        "国家责任"
+      ]
+    },
+    {
+      "analysis_date": "2025-07-04",
+      "post_count": 33,
+      "summary_text": "Trump庆祝\"ONE BIG BEAUTIFUL BILL ACT\"的重大胜利，这是一项重要的立法成就。通过多条帖子表达了对这一政策胜利的喜悦，并感谢了支持者们的努力。",
+      "key_topics": [
+        "立法胜利",
+        "ONE BIG BEAUTIFUL BILL",
+        "政策成就",
+        "支持者感谢"
+      ]
+    }
+  ],
+  "recent_posts": [
+    {
+      "post_id": "sample_001",
+      "content": "The REMIGRATION policy is working beautifully! America First means America First, and we are taking back control of our borders like never before!",
+      "created_at": "2025-07-07 18:30:00",
+      "engagement_score": 95
+    },
+    {
+      "post_id": "sample_002",
+      "content": "Fake News Media doesn't want to report on the tremendous success of our border policies. They hate success, they hate America First!",
+      "created_at": "2025-07-07 16:45:00",
+      "engagement_score": 88
+    }
+  ],
+  "status": "sample_data"
+}
